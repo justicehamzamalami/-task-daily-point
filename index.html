@@ -2,219 +2,1357 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
   <title>Task Daily Point</title>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
+    :root {
+      --bg: #07111f;
+      --card: #101d2d;
+      --card-2: #14243a;
+      --primary: #1769ff;
+      --primary-dark: #073baf;
+      --gold: #f5b942;
+      --white: #ffffff;
+      --secondary: #91a0b3;
+      --success: #22c55e;
+      --error: #ef4444;
+      --border: rgba(255,255,255,.08);
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--white);
+      font-family: Arial, Helvetica, sans-serif;
     }
 
     body {
-      font-family: Arial, sans-serif;
-      background: #07111f;
-      color: white;
       min-height: 100vh;
-      padding: 20px;
-    }
-
-    .app {
-      max-width: 500px;
-      margin: auto;
-    }
-
-    .header {
-      text-align: center;
-      padding: 25px 0;
-    }
-
-    .logo {
-      width: 90px;
-      height: 90px;
-      border-radius: 22px;
-      margin-bottom: 12px;
-      object-fit: cover;
-    }
-
-    h1 {
-      font-size: 25px;
-    }
-
-    .subtitle {
-      color: #8d9aad;
-      margin-top: 6px;
-    }
-
-    .balance {
-      background: linear-gradient(135deg, #1769ff, #073baf);
-      border-radius: 22px;
-      padding: 25px;
-      text-align: center;
-      margin: 15px 0;
-    }
-
-    .balance-label {
-      color: #d8e5ff;
-      font-size: 14px;
-    }
-
-    .points {
-      font-size: 38px;
-      font-weight: bold;
-      margin: 8px 0;
-    }
-
-    .card {
-      background: #101d2d;
-      border-radius: 18px;
-      padding: 18px;
-      margin: 12px 0;
-    }
-
-    .card h3 {
-      margin-bottom: 7px;
-    }
-
-    .card p {
-      color: #91a0b3;
-      font-size: 14px;
-      margin-bottom: 15px;
+      overflow-x: hidden;
     }
 
     button {
-      width: 100%;
-      border: none;
-      border-radius: 13px;
-      padding: 14px;
-      background: #1769ff;
-      color: white;
-      font-size: 16px;
-      font-weight: bold;
+      font: inherit;
+      border: 0;
+      cursor: pointer;
     }
 
-    button:disabled {
-      opacity: 0.5;
+    .app {
+      width: 100%;
+      max-width: 600px;
+      min-height: 100vh;
+      margin: 0 auto;
+      padding-bottom: 90px;
+    }
+
+    .loading-screen,
+    .outside-screen,
+    .error-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 25px;
+      text-align: center;
+    }
+
+    .loading-box,
+    .message-box {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 30px 22px;
+    }
+
+    .logo {
+      width: 70px;
+      height: 70px;
+      margin: 0 auto 18px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      font-weight: 800;
+    }
+
+    .spinner {
+      width: 34px;
+      height: 34px;
+      margin: 20px auto 0;
+      border: 3px solid rgba(255,255,255,.15);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    header {
+      padding: 22px 18px 10px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 19px;
+    }
+
+    .brand h1 {
+      font-size: 19px;
+      line-height: 1.2;
+    }
+
+    .brand p {
+      color: var(--secondary);
+      font-size: 12px;
+      margin-top: 3px;
     }
 
     .status {
-      text-align: center;
-      color: #91a0b3;
-      font-size: 13px;
-      margin-top: 15px;
+      font-size: 11px;
+      padding: 7px 10px;
+      border-radius: 20px;
+      background: rgba(34,197,94,.1);
+      color: var(--success);
+      white-space: nowrap;
     }
 
-    .nav {
+    .status.error {
+      color: var(--error);
+      background: rgba(239,68,68,.1);
+    }
+
+    main {
+      padding: 10px 18px;
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .hero-card {
+      margin-top: 12px;
+      padding: 25px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #1769ff, #073baf);
+      box-shadow: 0 15px 40px rgba(0,0,0,.25);
+    }
+
+    .hero-label {
+      color: rgba(255,255,255,.75);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+    }
+
+    .points {
+      font-size: 42px;
+      font-weight: 800;
+      margin: 8px 0;
+    }
+
+    .points-text {
+      color: rgba(255,255,255,.75);
+      font-size: 13px;
+    }
+
+    .section-title {
+      margin: 25px 0 12px;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 19px;
+      padding: 18px;
+      margin-bottom: 12px;
+    }
+
+    .task-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .task-icon {
+      width: 45px;
+      height: 45px;
+      flex-shrink: 0;
+      border-radius: 14px;
+      background: rgba(245,185,66,.12);
+      color: var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .task-info {
+      flex: 1;
+    }
+
+    .task-info h3 {
+      font-size: 15px;
+      margin-bottom: 5px;
+    }
+
+    .task-info p {
+      font-size: 12px;
+      color: var(--secondary);
+    }
+
+    .primary-btn {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 13px;
+      background: var(--primary);
+      color: white;
+      font-weight: 700;
+      transition: .2s;
+    }
+
+    .primary-btn:active {
+      transform: scale(.98);
+    }
+
+    .primary-btn:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    .secondary-btn {
+      width: 100%;
+      padding: 13px 16px;
+      border-radius: 13px;
+      background: var(--card-2);
+      color: white;
+      font-weight: 700;
+      margin-top: 10px;
+    }
+
+    .reward {
+      color: var(--gold);
+      font-weight: 700;
+      font-size: 13px;
+      margin-top: 6px;
+    }
+
+    .referral-box {
+      margin-top: 15px;
+      padding: 13px;
+      background: #091625;
+      border-radius: 12px;
+      word-break: break-all;
+      color: var(--secondary);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .profile-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .profile-row:last-child {
+      border-bottom: 0;
+    }
+
+    .profile-label {
+      color: var(--secondary);
+      font-size: 13px;
+    }
+
+    .profile-value {
+      text-align: right;
+      font-size: 14px;
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 35px 15px;
+      color: var(--secondary);
+    }
+
+    .notice {
+      padding: 13px 15px;
+      margin: 15px 0;
+      border-radius: 13px;
+      font-size: 13px;
+      line-height: 1.5;
+      display: none;
+    }
+
+    .notice.success {
+      display: block;
+      color: #9af7b5;
+      background: rgba(34,197,94,.1);
+      border: 1px solid rgba(34,197,94,.2);
+    }
+
+    .notice.error {
+      display: block;
+      color: #ffb0b0;
+      background: rgba(239,68,68,.1);
+      border: 1px solid rgba(239,68,68,.2);
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 600px;
+      padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+      background: rgba(7,17,31,.96);
+      backdrop-filter: blur(15px);
+      border-top: 1px solid var(--border);
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin-top: 20px;
+      z-index: 100;
     }
 
-    .nav button {
-      background: #101d2d;
-      font-size: 12px;
-      padding: 12px 5px;
+    .nav-btn {
+      background: transparent;
+      color: var(--secondary);
+      padding: 8px 4px;
+      border-radius: 12px;
+      font-size: 11px;
+    }
+
+    .nav-icon {
+      display: block;
+      font-size: 19px;
+      margin-bottom: 4px;
+    }
+
+    .nav-btn.active {
+      color: white;
+      background: rgba(23,105,255,.13);
+    }
+
+    .error-title {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .error-message {
+      color: var(--secondary);
+      line-height: 1.5;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    @media (min-width: 601px) {
+      .bottom-nav {
+        border-left: 1px solid var(--border);
+        border-right: 1px solid var(--border);
+      }
     }
   </style>
 </head>
 
 <body>
 
-<div class="app">
-
-  <div class="header">
-    <h1>Task Daily Point</h1>
-    <div class="subtitle">Complete tasks. Earn points.</div>
+  <!-- Loading -->
+  <div id="loadingScreen" class="loading-screen">
+    <div class="loading-box">
+      <div class="logo">T</div>
+      <h2>Task Daily Point</h2>
+      <p style="color:var(--secondary); margin-top:8px;">
+        Connecting to Telegram...
+      </p>
+      <div class="spinner"></div>
+    </div>
   </div>
 
-  <div class="balance">
-    <div class="balance-label">YOUR POINTS</div>
-    <div class="points" id="points">0</div>
-    <div class="balance-label">Daily Points</div>
+  <!-- Outside Telegram -->
+  <div id="outsideScreen" class="outside-screen hidden">
+    <div class="message-box">
+      <div class="logo">T</div>
+      <h2>Task Daily Point</h2>
+      <p style="color:var(--secondary); margin-top:10px;">
+        Please open Task Daily Point from Telegram.
+      </p>
+    </div>
   </div>
 
-  <div class="card">
-    <h3>Daily Check-in</h3>
-    <p>Claim your daily points and keep your streak active.</p>
-
-    <button id="checkinButton" onclick="dailyCheckIn()">
-      Claim +100 Points
-    </button>
+  <!-- Error -->
+  <div id="errorScreen" class="error-screen hidden">
+    <div class="message-box">
+      <div class="logo">!</div>
+      <div class="error-title">Connection Failed</div>
+      <div id="errorMessage" class="error-message">
+        Unable to connect to Task Daily Point.
+      </div>
+      <button id="retryButton" class="primary-btn">
+        Try Again
+      </button>
+    </div>
   </div>
 
-  <div class="card">
-    <h3>Complete Tasks</h3>
-    <p>Complete simple tasks and earn more points.</p>
+  <!-- Main App -->
+  <div id="app" class="app hidden">
 
-    <button onclick="showMessage('Tasks will be available soon.')">
-      View Tasks
-    </button>
+    <header>
+      <div class="topbar">
+        <div class="brand">
+          <div class="brand-logo">T</div>
+          <div>
+            <h1>Task Daily Point</h1>
+            <p>Complete tasks. Earn points.</p>
+          </div>
+        </div>
+
+        <div id="connectionStatus" class="status">
+          Connecting...
+        </div>
+      </div>
+    </header>
+
+    <main>
+
+      <!-- HOME -->
+      <section id="homeScreen" class="screen active">
+
+        <div class="hero-card">
+          <div class="hero-label">Your Points</div>
+          <div id="pointsValue" class="points">0</div>
+          <div class="points-text">
+            Keep completing tasks to earn more.
+          </div>
+        </div>
+
+        <div id="homeNotice" class="notice"></div>
+
+        <div class="section-title">Daily Points</div>
+
+        <div class="card task-card">
+          <div class="task-icon">+</div>
+
+          <div class="task-info">
+            <h3>Daily Check-in</h3>
+            <p>Claim your daily reward.</p>
+            <div class="reward">+100 Points</div>
+          </div>
+
+          <button id="checkinButton" class="primary-btn"
+                  style="width:auto; white-space:nowrap;">
+            Claim
+          </button>
+        </div>
+
+        <div class="section-title">Quick Actions</div>
+
+        <div class="card task-card">
+          <div class="task-icon">✓</div>
+
+          <div class="task-info">
+            <h3>Complete Tasks</h3>
+            <p>Complete available tasks and earn points.</p>
+          </div>
+
+          <button class="secondary-btn"
+                  style="width:auto; margin:0;"
+                  onclick="showScreen('tasks')">
+            View
+          </button>
+        </div>
+
+        <div class="card task-card">
+          <div class="task-icon">↗</div>
+
+          <div class="task-info">
+            <h3>Invite Friends</h3>
+            <p>Invite friends and earn referral rewards.</p>
+          </div>
+
+          <button class="secondary-btn"
+                  style="width:auto; margin:0;"
+                  onclick="showScreen('friends')">
+            Invite
+          </button>
+        </div>
+
+      </section>
+
+      <!-- TASKS -->
+      <section id="tasksScreen" class="screen">
+
+        <div class="section-title">Tasks</div>
+
+        <div class="card">
+          <div class="empty">
+            <h3 style="color:white; margin-bottom:8px;">
+              Tasks Coming Soon
+            </h3>
+
+            <p>
+              New earning tasks will appear here.
+            </p>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- FRIENDS -->
+      <section id="friendsScreen" class="screen">
+
+        <div class="section-title">Invite Friends</div>
+
+        <div class="card">
+          <h3>Referral Program</h3>
+
+          <p style="color:var(--secondary); font-size:13px; line-height:1.5; margin-top:8px;">
+            Invite your friends to Task Daily Point using your personal referral link.
+          </p>
+
+          <div id="referralLink" class="referral-box">
+            Loading referral link...
+          </div>
+
+          <button id="shareButton"
+                  class="primary-btn"
+                  style="margin-top:12px;">
+            Share Referral Link
+          </button>
+
+          <button id="copyButton"
+                  class="secondary-btn">
+            Copy Referral Link
+          </button>
+        </div>
+
+        <div class="section-title">Your Invites</div>
+
+        <div class="card">
+          <div class="empty">
+            <p>
+              Your invited users and referral rewards will appear here.
+            </p>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- PROFILE -->
+      <section id="profileScreen" class="screen">
+
+        <div class="section-title">Profile</div>
+
+        <div class="card">
+
+          <div class="profile-row">
+            <span class="profile-label">First Name</span>
+            <span id="profileFirstName" class="profile-value">—</span>
+          </div>
+
+          <div class="profile-row">
+            <span class="profile-label">Username</span>
+            <span id="profileUsername" class="profile-value">—</span>
+          </div>
+
+          <div class="profile-row">
+            <span class="profile-label">Telegram ID</span>
+            <span id="profileTelegramId" class="profile-value">—</span>
+          </div>
+
+          <div class="profile-row">
+            <span class="profile-label">Points</span>
+            <span id="profilePoints"
+                  class="profile-value"
+                  style="color:var(--gold);">
+              0
+            </span>
+          </div>
+
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+
+      <button class="nav-btn active"
+              data-screen="home"
+              onclick="showScreen('home')">
+        <span class="nav-icon">⌂</span>
+        Home
+      </button>
+
+      <button class="nav-btn"
+              data-screen="tasks"
+              onclick="showScreen('tasks')">
+        <span class="nav-icon">✓</span>
+        Tasks
+      </button>
+
+      <button class="nav-btn"
+              data-screen="friends"
+              onclick="showScreen('friends')">
+        <span class="nav-icon">👥</span>
+        Friends
+      </button>
+
+      <button class="nav-btn"
+              data-screen="profile"
+              onclick="showScreen('profile')">
+        <span class="nav-icon">●</span>
+        Profile
+      </button>
+
+    </nav>
+
   </div>
 
-  <div class="card">
-    <h3>Invite Friends</h3>
-    <p>Invite friends and earn referral points.</p>
+  <script>
+    /*
+      ============================================================
+      TASK DAILY POINT
+      FRONTEND CONFIGURATION
+      ============================================================
+    */
 
-    <button onclick="inviteFriends()">
-      Invite Friends
-    </button>
-  </div>
+    const API_URL =
+      "https://bbkzhczfzgdvqbsudpik.supabase.co/functions/v1/telegram-api";
 
-  <div class="nav">
-    <button onclick="showMessage('Home')">Home</button>
-    <button onclick="showMessage('Tasks')">Tasks</button>
-    <button onclick="showMessage('Friends')">Friends</button>
-    <button onclick="showMessage('Profile')">Profile</button>
-  </div>
+    const BOT_USERNAME = "Taskdailypointbot";
 
-  <div class="status" id="status">
-    Connecting...
-  </div>
+    const tg =
+      window.Telegram &&
+      window.Telegram.WebApp
+        ? window.Telegram.WebApp
+        : null;
 
-</div>
+    let currentProfile = null;
 
-<script>
+    /*
+      ============================================================
+      ELEMENTS
+      ============================================================
+    */
 
-  const tg = window.Telegram.WebApp;
+    const loadingScreen =
+      document.getElementById("loadingScreen");
 
-  tg.ready();
-  tg.expand();
+    const outsideScreen =
+      document.getElementById("outsideScreen");
 
-  const SUPABASE_FUNCTION =
-    "https://bbkzhczfzgdvqbsudpik.supabase.co/functions/v1/telegram-api";
+    const errorScreen =
+      document.getElementById("errorScreen");
 
-  let userProfile = null;
+    const errorMessage =
+      document.getElementById("errorMessage");
 
-  async function callAPI(action) {
+    const retryButton =
+      document.getElementById("retryButton");
 
-    const response = await fetch(SUPABASE_FUNCTION, {
-      method: "POST",
+    const app =
+      document.getElementById("app");
 
-      headers: {
-        "Content-Type": "application/json"
-      },
+    const connectionStatus =
+      document.getElementById("connectionStatus");
 
-      body: JSON.stringify({
-        action: action,
-        initData: tg.initData
-      })
-    });
+    const pointsValue =
+      document.getElementById("pointsValue");
 
-    const data = await response.json();
+    const profileFirstName =
+      document.getElementById("profileFirstName");
 
-    if (!response.ok || data.success === false) {
-      throw new Error(data.error || data.message || "Request failed");
+    const profileUsername =
+      document.getElementById("profileUsername");
+
+    const profileTelegramId =
+      document.getElementById("profileTelegramId");
+
+    const profilePoints =
+      document.getElementById("profilePoints");
+
+    const referralLink =
+      document.getElementById("referralLink");
+
+    const checkinButton =
+      document.getElementById("checkinButton");
+
+    const shareButton =
+      document.getElementById("shareButton");
+
+    const copyButton =
+      document.getElementById("copyButton");
+
+    const homeNotice =
+      document.getElementById("homeNotice");
+
+    /*
+      ============================================================
+      TELEGRAM INITIALIZATION
+      ============================================================
+    */
+
+    function initializeTelegram() {
+      if (!tg) {
+        showOutsideTelegram();
+        return false;
+      }
+
+      try {
+        tg.ready();
+        tg.expand();
+
+        if (typeof tg.setHeaderColor === "function") {
+          tg.setHeaderColor("#07111F");
+        }
+
+        if (typeof tg.setBackgroundColor === "function") {
+          tg.setBackgroundColor("#07111F");
+        }
+      } catch (error) {
+        console.warn("Telegram initialization warning:", error);
+      }
+
+      return true;
     }
 
-    return data;
-  }
+    /*
+      ============================================================
+      SCREEN STATES
+      ============================================================
+    */
 
-  async function loadProfile() {
+    function showLoading() {
+      loadingScreen.classList.remove("hidden");
+      outsideScreen.classList.add("hidden");
+      errorScreen.classList.add("hidden");
+      app.classList.add("hidden");
+    }
 
-    try
-  
+    function showOutsideTelegram() {
+      loadingScreen.classList.add("hidden");
+      errorScreen.classList.add("hidden");
+      app.classList.add("hidden");
+      outsideScreen.classList.remove("hidden");
+    }
+
+    function showApp() {
+      loadingScreen.classList.add("hidden");
+      outsideScreen.classList.add("hidden");
+      errorScreen.classList.add("hidden");
+      app.classList.remove("hidden");
+    }
+
+    function showError(message) {
+      loadingScreen.classList.add("hidden");
+      outsideScreen.classList.add("hidden");
+      app.classList.add("hidden");
+
+      errorMessage.textContent =
+        message || "Unable to connect to Task Daily Point.";
+
+      errorScreen.classList.remove("hidden");
+    }
+
+    /*
+      ============================================================
+      API
+      ============================================================
+    */
+
+    async function callApi(action) {
+
+      if (!tg) {
+        throw new Error(
+          "Please open Task Daily Point from Telegram."
+        );
+      }
+
+      const initData = tg.initData;
+
+      if (!initData) {
+        showOutsideTelegram();
+
+        throw new Error(
+          "Please open Task Daily Point from Telegram."
+        );
+      }
+
+      let response;
+
+      try {
+
+        response = await fetch(API_URL, {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          body: JSON.stringify({
+            action: action,
+            initData: initData
+          })
+        });
+
+      } catch (networkError) {
+
+        throw new Error(
+          "Unable to connect to the server. Please check your internet connection and try again."
+        );
+      }
+
+      let result;
+
+      try {
+        result = await response.json();
+      } catch (parseError) {
+        throw new Error(
+          "The server returned an invalid response."
+        );
+      }
+
+      if (!response.ok || !result.ok) {
+
+        throw new Error(
+          result &&
+          result.error
+            ? result.error
+            : "Request failed."
+        );
+      }
+
+      return result.data;
+    }
+
+    /*
+      ============================================================
+      LOAD PROFILE
+      ============================================================
+    */
+
+    async function loadProfile() {
+
+      showLoading();
+
+      if (!tg || !tg.initData) {
+        showOutsideTelegram();
+        return;
+      }
+
+      try {
+
+        const data = await callApi("profile");
+
+        if (!data || !data.profile) {
+          throw new Error(
+            "The server did not return a valid profile."
+          );
+        }
+
+        currentProfile = data.profile;
+
+        updateProfileUI(currentProfile);
+
+        setConnectionStatus(
+          "Connected",
+          false
+        );
+
+        showApp();
+
+      } catch (error) {
+
+        console.error("Profile error:", error);
+
+        setConnectionStatus(
+          "Connection failed",
+          true
+        );
+
+        showError(
+          error.message ||
+          "Unable to load your profile."
+        );
+      }
+    }
+
+    /*
+      ============================================================
+      UPDATE PROFILE UI
+      ============================================================
+    */
+
+    function updateProfileUI(profile) {
+
+      const points =
+        Number(profile.points || 0);
+
+      pointsValue.textContent =
+        points.toLocaleString();
+
+      profilePoints.textContent =
+        points.toLocaleString();
+
+      profileFirstName.textContent =
+        profile.first_name || "—";
+
+      profileUsername.textContent =
+        profile.username
+          ? "@" + profile.username
+          : "No username";
+
+      profileTelegramId.textContent =
+        profile.telegram_id || "—";
+
+      updateReferralLink(profile);
+    }
+
+    /*
+      ============================================================
+      REFERRAL LINK
+      ============================================================
+    */
+
+    function updateReferralLink(profile) {
+
+      if (!profile || !profile.telegram_id) {
+        referralLink.textContent =
+          "Referral link unavailable.";
+        return;
+      }
+
+      const link =
+        "https://t.me/" +
+        BOT_USERNAME +
+        "?start=ref_" +
+        encodeURIComponent(
+          profile.telegram_id
+        );
+
+      referralLink.textContent = link;
+    }
+
+    /*
+      ============================================================
+      DAILY CHECK-IN
+      ============================================================
+    */
+
+    async function handleCheckin() {
+
+      if (checkinButton.disabled) {
+        return;
+      }
+
+      clearNotice();
+
+      checkinButton.disabled = true;
+      checkinButton.textContent = "Claiming...";
+
+      try {
+
+        const data =
+          await callApi("checkin");
+
+        /*
+          Never add points locally.
+
+          The server/database is the authority.
+          Refresh the profile after a successful
+          check-in.
+        */
+
+        if (
+          data &&
+          data.profile
+        ) {
+
+          currentProfile =
+            data.profile;
+
+          updateProfileUI(
+            currentProfile
+          );
+
+        } else {
+
+          const profileData =
+            await callApi("profile");
+
+          if (
+            profileData &&
+            profileData.profile
+          ) {
+
+            currentProfile =
+              profileData.profile;
+
+            updateProfileUI(
+              currentProfile
+            );
+          }
+        }
+
+        showNotice(
+          "Daily check-in successful.",
+          "success"
+        );
+
+      } catch (error) {
+
+        console.error(
+          "Check-in error:",
+          error
+        );
+
+        showNotice(
+          error.message ||
+          "Daily check-in failed.",
+          "error"
+        );
+
+      } finally {
+
+        checkinButton.disabled = false;
+        checkinButton.textContent = "Claim";
+      }
+    }
+
+    /*
+      ============================================================
+      NOTICE
+      ============================================================
+    */
+
+    function showNotice(message, type) {
+
+      homeNotice.textContent = message;
+
+      homeNotice.className =
+        "notice " +
+        (type === "success"
+          ? "success"
+          : "error");
+    }
+
+    function clearNotice() {
+
+      homeNotice.textContent = "";
+      homeNotice.className = "notice";
+    }
+
+    /*
+      ============================================================
+      CONNECTION STATUS
+      ============================================================
+    */
+
+    function setConnectionStatus(
+      text,
+      isError
+    ) {
+
+      connectionStatus.textContent =
+        text;
+
+      connectionStatus.classList.toggle(
+        "error",
+        Boolean(isError)
+      );
+    }
+
+    /*
+      ============================================================
+      NAVIGATION
+      ============================================================
+    */
+
+    function showScreen(screenName) {
+
+      const screens =
+        document.querySelectorAll(
+          ".screen"
+        );
+
+      screens.forEach(screen => {
+        screen.classList.remove("active");
+      });
+
+      const target =
+        document.getElementById(
+          screenName + "Screen"
+        );
+
+      if (target) {
+        target.classList.add("active");
+      }
+
+      const navButtons =
+        document.querySelectorAll(
+          ".nav-btn"
+        );
+
+      navButtons.forEach(button => {
+
+        button.classList.toggle(
+          "active",
+          button.dataset.screen === screenName
+        );
+
+      });
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    }
+
+    /*
+      ============================================================
+      SHARE REFERRAL
+      ============================================================
+    */
+
+    async function shareReferral() {
+
+      if (
+        !currentProfile ||
+        !currentProfile.telegram_id
+      ) {
+
+        showNotice(
+          "Referral link is not ready yet.",
+          "error"
+        );
+
+        return;
+      }
+
+      const link =
+        "https://t.me/" +
+        BOT_USERNAME +
+        "?start=ref_" +
+        encodeURIComponent(
+          currentProfile.telegram_id
+        );
+
+      const shareUrl =
+        "https://t.me/share/url?url=" +
+        encodeURIComponent(link) +
+        "&text=" +
+        encodeURIComponent(
+          "Join me on Task Daily Point and start earning points."
+        );
+
+      try {
+
+        if (
+          tg &&
+          typeof tg.openTelegramLink === "function"
+        ) {
+
+          tg.openTelegramLink(
+            shareUrl
+          );
+
+          return;
+        }
+
+        if (
+          navigator.share
+        ) {
+
+          await navigator.share({
+            title: "Task Daily Point",
+            text: "Join me on Task Daily Point and start earning points.",
+            url: link
+          });
+
+          return;
+        }
+
+        await copyReferral();
+
+      } catch (error) {
+
+        console.warn(
+          "Share cancelled or failed:",
+          error
+        );
+      }
+    }
+
+    /*
+      ============================================================
+      COPY REFERRAL
+      ============================================================
+    */
+
+    async function copyReferral() {
+
+      if (
+        !currentProfile ||
+        !currentProfile.telegram_id
+      ) {
+
+        showNotice(
+          "Referral link is not ready yet.",
+          "error"
+        );
+
+        return;
+      }
+
+      const link =
+        "https://t.me/" +
+        BOT_USERNAME +
+        "?start=ref_" +
+        encodeURIComponent(
+          currentProfile.telegram_id
+        );
+
+      try {
+
+        await navigator.clipboard.writeText(
+          link
+        );
+
+        showNotice(
+          "Referral link copied.",
+          "success"
+        );
+
+      } catch (error) {
+
+        showNotice(
+          "Unable to copy the referral link.",
+          "error"
+        );
+      }
+    }
+
+    /*
+      ============================================================
+      EVENT LISTENERS
+      ============================================================
+    */
+
+    checkinButton.addEventListener(
+      "click",
+      handleCheckin
+    );
+
+    shareButton.addEventListener(
+      "click",
+      shareReferral
+    );
+
+    copyButton.addEventListener(
+      "click",
+      copyReferral
+    );
+
+    retryButton.addEventListener(
+      "click",
+      loadProfile
+    );
+
+    /*
+      ============================================================
+      START APP
+      ============================================================
+    */
+
+    async function startApp() {
+
+      const telegramReady =
+        initializeTelegram();
+
+      if (!telegramReady) {
+        return;
+      }
+
+      /*
+        IMPORTANT:
+
+        Authentication uses ONLY tg.initData.
+
+        We deliberately do not use:
+        tg.initDataUnsafe.user.id
+
+        The server validates initData before
+        accepting the Telegram identity.
+      */
+
+      if (!tg.initData) {
+        showOutsideTelegram();
+        return;
+      }
+
+      await loadProfile();
+    }
+
+    startApp();
+
+  </script>
+
+</body>
+</html>
