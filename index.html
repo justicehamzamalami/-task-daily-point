@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Task Daily Point</title>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -35,8 +36,9 @@
     .logo {
       width: 90px;
       height: 90px;
-      border-radius: 25px;
+      border-radius: 22px;
       margin-bottom: 12px;
+      object-fit: cover;
     }
 
     h1 {
@@ -95,8 +97,15 @@
       font-weight: bold;
     }
 
-    button:active {
-      transform: scale(.98);
+    button:disabled {
+      opacity: 0.5;
+    }
+
+    .status {
+      text-align: center;
+      color: #91a0b3;
+      font-size: 13px;
+      margin-top: 15px;
     }
 
     .nav {
@@ -132,50 +141,79 @@
   <div class="card">
     <h3>Daily Check-in</h3>
     <p>Claim your daily points and keep your streak active.</p>
-    <button onclick="dailyCheckIn()">Claim +100 Points</button>
+
+    <button id="checkinButton" onclick="dailyCheckIn()">
+      Claim +100 Points
+    </button>
   </div>
 
   <div class="card">
     <h3>Complete Tasks</h3>
     <p>Complete simple tasks and earn more points.</p>
-    <button onclick="showMessage()">View Tasks</button>
+
+    <button onclick="showMessage('Tasks will be available soon.')">
+      View Tasks
+    </button>
   </div>
 
   <div class="card">
     <h3>Invite Friends</h3>
     <p>Invite friends and earn referral points.</p>
-    <button onclick="showMessage()">Invite Friends</button>
+
+    <button onclick="inviteFriends()">
+      Invite Friends
+    </button>
   </div>
 
   <div class="nav">
-    <button>Home</button>
-    <button>Tasks</button>
-    <button>Friends</button>
-    <button>Profile</button>
+    <button onclick="showMessage('Home')">Home</button>
+    <button onclick="showMessage('Tasks')">Tasks</button>
+    <button onclick="showMessage('Friends')">Friends</button>
+    <button onclick="showMessage('Profile')">Profile</button>
+  </div>
+
+  <div class="status" id="status">
+    Connecting...
   </div>
 
 </div>
 
 <script>
+
   const tg = window.Telegram.WebApp;
 
   tg.ready();
   tg.expand();
 
-  let points = 0;
+  const SUPABASE_FUNCTION =
+    "https://bbkzhczfzgdvqbsudpik.supabase.co/functions/v1/telegram-api";
 
-  function dailyCheckIn() {
-    points += 100;
-    document.getElementById("points").innerText =
-      points.toLocaleString();
+  let userProfile = null;
 
-    tg.showAlert("Congratulations! You earned 100 points.");
+  async function callAPI(action) {
+
+    const response = await fetch(SUPABASE_FUNCTION, {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify({
+        action: action,
+        initData: tg.initData
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || data.success === false) {
+      throw new Error(data.error || data.message || "Request failed");
+    }
+
+    return data;
   }
 
-  function showMessage() {
-    tg.showAlert("This section will be available soon.");
-  }
-</script>
+  async function loadProfile() {
 
-</body>
-</html>
+    try
